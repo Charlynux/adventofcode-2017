@@ -66,3 +66,44 @@
 (assert (= (calculate-distance 1024) 31))
 
 (calculate-distance 368078)
+
+
+(defn is-neighbor [[x y]]
+    (let [diff-is-one #(= (Math/abs (- %1 %2))  1)
+            diff-is-zero #(= (Math/abs (- %1 %2))  0)]
+        (fn [{ [a b] :position }] 
+            (or 
+                (and (diff-is-one a x) (diff-is-one b y))
+                (and (diff-is-zero a x) (diff-is-one b y))
+                (and (diff-is-one a x) (diff-is-zero b y))
+            ))))
+
+(defn find-neighbors [position coll]
+    (filter (is-neighbor position) coll))
+
+(defn neighbor-reducer [acc value]
+    (let [  prev (last acc)
+            move (next-move (:position prev) (:prev-move prev))
+            next-position (apply (move moves-fn) (:position prev))
+            neighbors (find-neighbors next-position acc)]
+        (conj acc {
+            :position next-position
+            :prev-move move
+            :value (apply + (map :value neighbors))
+        })
+    ))
+
+(defn find-next-value-neighbors [number]
+    (let [reducer-until 
+            #(if (> (:value (last %1)) number) 
+                (reduced %1)
+                (neighbor-reducer %1 %2))]
+        (->>
+            (range)
+            (reduce reducer-until [init-state])
+            last
+            :value
+        )))
+
+(find-next-value-neighbors 3)
+(find-next-value-neighbors 368078)
