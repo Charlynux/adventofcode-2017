@@ -27,24 +27,27 @@
 (assert (= (next-move [0 1] :right) :up))
 (assert (= (next-move [1 1] :up) :left))
 
-(def init-state {:position [0 0] :prev-move :right})
+(def init-state {:position [0 0] :prev-move :right :value 1})
 
-(defn reducer [prev value]
+(defn reducer [prev]
     (let [move (next-move (:position prev) (:prev-move prev))]
         {
             :position (apply (move moves-fn) (:position prev))
             :prev-move move
+            :value (inc (:value prev))
         }
     ))
 
 (defn find-position [number]
     (->>
-        (range number) 
-        rest
-        (reduce reducer init-state)
-        :position))
+        (iterate reducer init-state)
+        (take-while #(<= (:value %) number))
+        last
+        :position
+    ))
+(find-position 13)
 
-(assert (= (find-position 1) [0 0]))
+; (assert (= (find-position 1) [0 0]))
 
 ; d = |a - x| + |b - y|
 (defn manhattan-distance [[a b] [x y]]
