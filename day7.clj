@@ -1,15 +1,11 @@
 (defn get-childrens [programs-map]
-    (reduce-kv
-        #(concat %1 (:children %3))
-        []
-        programs-map))
+    (apply concat (map :children (vals programs-map))))
 
 (defn solution [programs-map]
-    (let [childrens (get-childrens programs-map)]
-        (filter
-            (complement #(some #{(first %)} childrens))
-            programs-map))
-        )
+    (let [
+            parents (keys programs-map)
+            childrens (get-childrens programs-map)]
+        (first (clojure.set/difference (set parents) (set childrens)))))
 
 (defn read-program-line [text]
     (let [matcher (re-matcher #"(\w+) \((\d+)\)(?: -> )?(.+)?" text)
