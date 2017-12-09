@@ -80,3 +80,12 @@
 (def data (parse (slurp "day8.data")))
 
 (solution data)
+
+
+(defn solution2 [instructions]
+    (->>
+        (reductions apply-instruction {} instructions)
+        (map vals)
+        (reduce concat)
+        (apply max)
+))
