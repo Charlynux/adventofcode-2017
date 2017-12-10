@@ -17,20 +17,18 @@
         :collect))
 
 (defn step [accum character]
-    (let [update-values (if (and 
-                                (= (:action accum) :collect)
-                                (or (= "{" character) (= "}" character)))
-                            (fn [values] (conj values character))
-                            identity)
-            update-garbage (if (and 
-                                ;; Should be prev-action = ":collect-garbage" and next-action = ":collect-garbage"
-                                (= (:action accum) :collect-garbage)
-                                (and (not= "!" character) (not= ">" character)))
-                            (fn [values] (conj values character))
-                            identity)]
-    (-> (update accum :action #(next-action % character))
-        (update :garbage update-garbage)
-        (update :values update-values))))
+    (let [
+        action (:action accum)
+        next-action (next-action action character)
+        collector (cond 
+                            (and (= action :collect) (or (= "{" character) (= "}" character))) :values
+                            (= action next-action :collect-garbage) :garbage
+                            :else nil)
+        update-collector (if (nil? collector)
+                            identity
+                            (fn [acc] (update acc collector #(conj % character))))]
+    (-> (assoc accum :action next-action)
+        (update-collector))))
 
 (defn process-data [characters]
     (reduce step { :action :collect :values [] :garbage [] } characters))
@@ -38,7 +36,7 @@
 (def remove-garbage (comp :values process-data))
 
 (defn group-step [accum character]
-    (if (and (= character "}") (>= (:open-bracket accum) 1))
+    (if (= character "}")
         (-> (update accum :values #(conj % (:open-bracket accum)))
             (update :open-bracket dec))
         (update accum :open-bracket inc)))
