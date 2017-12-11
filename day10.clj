@@ -38,6 +38,36 @@
          (take 2)
          (apply *)))
 
-(def data (parse "199,0,255,136,174,254,227,16,51,85,1,2,22,17,7,192"))
+(def input-string "199,0,255,136,174,254,227,16,51,85,1,2,22,17,7,192")
+(def data (parse input-string))
 
 ;(solution data)
+
+;;;; PART 2
+
+(def ascii-codes (partial map int))
+(defn add-suffix [list] (concat list [17 31 73 47 23]))
+(def multiply-input (comp flatten (partial repeat 64)))
+(def prepare-data (comp vec multiply-input add-suffix ascii-codes))
+  
+;;; (prepare-data "1,2,3")
+
+;; 65 ^ 27 ^ 9 ^ 1 ^ 4 ^ 3 ^ 40 ^ 50 ^ 91 ^ 7 ^ 6 ^ 0 ^ 2 ^ 5 ^ 68 ^ 22 = 64
+;;;(bit-xor 65 27 9 1 4 3 40 50 91 7 6 0 2 5 68 22)
+
+(defn calculate-result [numbers]
+    (->> 
+        (partition 16 numbers)
+        (map (partial apply bit-xor))
+        (map (partial format "%02x"))
+        (apply str)))
+
+(defn solution-2 [input]
+    (->> (prepare-data input)
+         (reduce-kv 
+            solution-step
+            { :list (apply vector (range 256)) :index 0 })
+         (:list)
+         (calculate-result)))
+
+(solution-2 input-string)
